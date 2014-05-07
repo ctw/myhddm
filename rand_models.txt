@@ -1,0 +1,14 @@
+"""msm"""
+m_subj = hddm.HDDM(subj_data, depends_on={'v':['stim', 'cue'], 'z':'cue'}, bias=True, include=['st', 'sv', 'sz', 't', 'a', 'v', 'z'])
+"""pbm"""
+#m_subj = hddm.HDDM(subj_data, depends_on={'v':'stim', 'z':'cue'}, bias=True, include=['st', 'sv', 'sz', 't', 'a', 'v', 'z'])
+"""dbm"""
+#m_subj = hddm.HDDM(subj_data, depends_on={'v':['stim', 'cue']}, include=['st', 'sv', 'sz', 't', 'a', 'v'])
+"""VZT1 model"""
+#m_subj = hddm.HDDM(subj_data, depends_on={'z':'cue', 'v':['stim', 'cue'], 't':['stim', 'cue']}, bias=True, include=['st', 'sv', 'sz', 't', 'a', 'v', 'z'])
+"""VZT3 model"""
+#m_subj=hddm.HDDM(subj_data, depends_on={'v':['stim', 'cue'], 't':['stim', 'cue']}, bias=True, include=['st', 'sv', 'sz', 't', 'a', 'v', 'z'])
+"""ATV3 model"""
+#m_subj=hddm.HDDM(subj_data, depends_on={'a':'noise', 'v':['stim', 'cue'], 't':['stim', 'cue']}, include=['st', 'sv', 'sz', 't', 'a', 'v'])
+"""ATVZ3 model"""
+#m_subj=hddm.HDDM(subj_data, depends_on={'a':'noise', 'v':['stim', 'cue'], 't':['stim', 'cue']}, bias=True, include=['st', 'sv', 'sz', 't', 'a', 'v', 'z'])
