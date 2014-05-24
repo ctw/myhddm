@@ -11,23 +11,24 @@ from kabuki.utils import interpolate_trace
 from scipy.stats.mstats import mquantiles
 from matplotlib import rc
 import os
+import seaborn as sns
 
-def get_nodes(model, nodes, project='imaging'):
-	
+def get_nodes(model, nodes, project='behav'):
+
 	if project=='behav':
-		
+
 		if nodes=='z':
 			z90H, z70H, z50N, z70F, z90F = model.nodes_db.node[['z(a90H)', 'z(b70H)', 'z(c50N)', 'z(d70F)', 'z(e90F)']]
 			zlist=[z90H, z70H, z50N, z70F, z90F]
 			return zlist
-	    
+
 		elif nodes=='vf':
-			v90Hface, v70Hface, v50Nface, v70Fface, v90Fface=model.nodes_db.node[['v(a90H.face)', 'v(b70H.face)', 'v(c50N.face)', 'v(d70F.face)', 'v(e90F.face)']] 
+			v90Hface, v70Hface, v50Nface, v70Fface, v90Fface=model.nodes_db.node[['v(a90H.face)', 'v(b70H.face)', 'v(c50N.face)', 'v(d70F.face)', 'v(e90F.face)']]
 			vflist=[v90Hface, v70Hface, v50Nface, v70Fface, v90Fface]
 			return vflist
-	    
+
 	 	elif nodes=='vh':
-			v90Hhouse, v70Hhouse, v50Nhouse, v70Fhouse, v90Fhouse=model.nodes_db.node[['v(a90H.house)', 'v(b70H.house)', 'v(c50N.house)', 'v(d70F.house)', 'v(e90F.house)']] 
+			v90Hhouse, v70Hhouse, v50Nhouse, v70Fhouse, v90Fhouse=model.nodes_db.node[['v(a90H.house)', 'v(b70H.house)', 'v(c50N.house)', 'v(d70F.house)', 'v(e90F.house)']]
 			vhlist=[v90Hhouse, v70Hhouse, v50Nhouse, v70Fhouse, v90Fhouse]
 			return vhlist
 
@@ -38,42 +39,53 @@ def get_nodes(model, nodes, project='imaging'):
 			return zlist
 
 		elif nodes=='vf':
-			v80Hface, v50Nface, v80Fface=model.nodes_db.node[['v(a80H.face)', 'v(b50N.face)', 'v(c80F.face)']] 
+			v80Hface, v50Nface, v80Fface=model.nodes_db.node[['v(a80H.face)', 'v(b50N.face)', 'v(c80F.face)']]
 			vflist=[v80Hface, v50Nface, v80Fface]
 			return vflist
 
 	 	elif nodes=='vh':
-			v80Hhouse, v50Nhouse, v80Fhouse=model.nodes_db.node[['v(a80H.house)', 'v(b50N.house)', 'v(c80F.house)']] 
+			v80Hhouse, v50Nhouse, v80Fhouse=model.nodes_db.node[['v(a80H.house)', 'v(b50N.house)', 'v(c80F.house)']]
 			vhlist=[v80Hhouse, v50Nhouse, v80Fhouse]
 			return vhlist
 
 
 def plot_posterior_nodes(model, param_nodes, bins=100, lb=None, ub=None):
-	title='Generic Title'
+	
+	sns.set_style('white')
+	sns.despine()
+	#title='Generic Title'
 	if param_nodes=='z':
 		nodes=get_nodes(model, 'z')
-		#title='Mean Starting-Point' + r'$\/(\mu_{z})$'
+		xlabel='Mean Starting-Point' + r'$\/(\mu_{z})$'
+		lb=.52
+		ub=.67
 	elif param_nodes=='vf':
 		nodes=get_nodes(model, 'vf')
-		#title='Mean Face Drift-Rate' + r'$\/(\mu_{vF})$'
+		xlabel='Mean Face Drift-Rate' + r'$\/(\mu_{vF})$'
+		lb=.35
+		ub=1.2
 	elif param_nodes=='vh':
 		nodes=get_nodes(model, 'vh')
-		#title='Mean House Drift-Rate' + r'$\/(\mu_{vH})$'
+		xlabel='Mean House Drift-Rate' + r'$\/(\mu_{vH})$'
+		lb=-1.15
+		ub=-.25
 	else:
 		print "Must provide argument: 'z', 'vf', or 'vh'"
-		
-		
+	
 	fig=plt.figure()
+	fig.subplots_adjust(top=0.95, wspace=0.12, left=0.12, right=0.88, bottom=0.16)
+	sns.despine()
 	#fig.suptitle(title, fontsize=20)
 	#fig.suptitle(title, fontsize=40)
+
 	if lb is None:
 		lb = min([min(node.trace()[:]) for node in nodes])
 	if ub is None:
 		ub = max([max(node.trace()[:]) for node in nodes])
-	
+
 	x_data = np.linspace(lb, ub, 600)
 	#colors=['Green', 'LimeGreen', 'Black', 'Cyan', 'Blue']
-	colors=['Red','Black', 'Blue']
+	colors=['Red','Magenta', 'Black', 'Cyan', 'Blue']
 	color_i=0
 	for node in nodes:
 		trace = node.trace()[:]
@@ -82,96 +94,102 @@ def plot_posterior_nodes(model, param_nodes, bins=100, lb=None, ub=None):
 		plt.plot(x_data, hist, label=node.__name__, lw=2., color=colors[color_i])
 		plt.fill_between(x_data, hist, 0, label=node.__name__, color=colors[color_i], alpha=0.3)
 		ax=plt.gca()
+		ax.set_xlim(lb, ub)
 		plt.setp(ax.get_yticklabels(), visible=False)
-		
-		ax.set_ylabel('Probability Mass', fontsize=30, labelpad=12)
-		#ax.set_xlabel('Posterior Estimate of ' + title, fontsize=25, labelpad=13)
-		plt.setp(ax.get_xticklabels(), fontsize=27)
-		plt.locator_params(axis='x', nbins=8)
+		sns.despine()
+		ax.set_ylabel('Probability Mass', fontsize=22, labelpad=12)
+		ax.set_xlabel(xlabel, fontsize=22, labelpad=13)
+		plt.setp(ax.get_xticklabels(), fontsize=18)
+		plt.locator_params(axis='x', nbins=10)
 		color_i+=1
 	#leg = plt.legend(loc='best', fancybox=True)
 	#leg.get_frame().set_alpha(0.5)
 	plt.ylim(ymin=0)
-	plt.savefig(str(param_nodes)+'_posterior_nodes.jpeg', dpi=900)
 	plt.savefig(str(param_nodes)+'_posterior_nodes.png', dpi=600)
 	#plt.savefig(str(param_nodes)+'_posterior_nodes.pdf', format='pdf')
 
 
-def diff_traces(model, output='all', project='imaging'):
+def diff_traces(model, output='all', project='behav'):
 	"""
-	change output to 'neut' if just want difference 
+	change output to 'neut' if just want difference
 	bw face and house drift at neutral condition
 	"""
 	if project=='behav':
-		v90Hface, v70Hface, v50Nface, v70Fface, v90Fface=model.nodes_db.node[['v(a90H.face)', 'v(b70H.face)', 'v(c50N.face)', 'v(d70F.face)', 'v(e90F.face)']] 
-		v90Hhouse, v70Hhouse, v50Nhouse, v70Fhouse, v90Fhouse=model.nodes_db.node[['v(a90H.house)', 'v(b70H.house)', 'v(c50N.house)', 'v(d70F.house)', 'v(e90F.house)']] 
+		v90Hface, v70Hface, v50Nface, v70Fface, v90Fface=model.nodes_db.node[['v(a90H.face)', 'v(b70H.face)', 'v(c50N.face)', 'v(d70F.face)', 'v(e90F.face)']]
+		v90Hhouse, v70Hhouse, v50Nhouse, v70Fhouse, v90Fhouse=model.nodes_db.node[['v(a90H.house)', 'v(b70H.house)', 'v(c50N.house)', 'v(d70F.house)', 'v(e90F.house)']]
 		z90H, z70H, z50N, z70F, z90F = model.nodes_db.node[['z(a90H)', 'z(b70H)', 'z(c50N)', 'z(d70F)', 'z(e90F)']]
-		
+
 		xtrace=abs(v50Nhouse.trace()) - abs(v50Nface.trace())
 		vf1_trace=v90Hface.trace() - v50Nface.trace()
 		vf2_trace=v70Hface.trace() - v50Nface.trace()
-		vf3_trace=v70Fface.trace() - v50Nface.trace() 
+		vf3_trace=v70Fface.trace() - v50Nface.trace()
 		vf4_trace=v90Fface.trace() - v50Nface.trace()
 		vf_list=[vf1_trace, vf2_trace, vf3_trace, vf4_trace]
 
 		vh1_trace=v90Hhouse.trace() - v50Nhouse.trace()
 		vh2_trace=v70Hhouse.trace() - v50Nhouse.trace()
-		vh3_trace=v70Fhouse.trace() - v50Nhouse.trace() 
+		vh3_trace=v70Fhouse.trace() - v50Nhouse.trace()
 		vh4_trace=v90Fhouse.trace() - v50Nhouse.trace()
 		vh_list=[vh1_trace, vh2_trace, vh3_trace, vh4_trace]
 
-		z1_trace=z90H.trace() - z50N.trace() 
-		z2_trace=z70H.trace() - z50N.trace() 
-		z3_trace=z70F.trace() - z50N.trace() 
-		z4_trace=z90F.trace() - z50N.trace() 
+		z1_trace=z90H.trace() - z50N.trace()
+		z2_trace=z70H.trace() - z50N.trace()
+		z3_trace=z70F.trace() - z50N.trace()
+		z4_trace=z90F.trace() - z50N.trace()
 		z_list=[z1_trace, z2_trace, z3_trace, z4_trace]
-				
-		
-	else:	
+
+
+	else:
 		z80H, z50N, z80F = model.nodes_db.node[['z(a80H)','z(b50N)', 'z(c80F)']]
 		v80Hhouse, v50Nhouse, v80Fhouse=model.nodes_db.node[['v(a80H.house)', 'v(b50N.house)', 'v(c80F.house)']]
 		v80Hface, v50Nface, v80Fface=model.nodes_db.node[['v(a80H.face)', 'v(b50N.face)', 'v(c80F.face)']]
-		 
+
 		xtrace=abs(v50Nhouse.trace()) - abs(v50Nface.trace())
 		vf1_trace=v80Hface.trace() - v50Nface.trace()
 		vf2_trace=v80Fface.trace() - v50Nface.trace()
-	
+
 		vf_list=[vf1_trace, vf2_trace]
 
 		vh1_trace=v80Hhouse.trace() - v50Nhouse.trace()
 		vh2_trace=v80Fhouse.trace() - v50Nhouse.trace()
 		vh_list=[vh1_trace, vh2_trace]
-	
-		z1_trace=z80H.trace() - z50N.trace() 
-		z2_trace=z80F.trace() - z50N.trace() 
+
+		z1_trace=z80H.trace() - z50N.trace()
+		z2_trace=z80F.trace() - z50N.trace()
 		z_list=[z1_trace, z2_trace]
-	
+
 	if output=='all':
 		return vf_list, vh_list, z_list
 	else:
 		return xtrace
 
 def plot_neutral_traces(model):
-
-	c=diff_traces(model, output='neut')	
 	
+	sns.set_style('white')
+	
+	c=diff_traces(model, output='neut')
+
 	save_fig=True
 	x_axis_list=r'$\mu_{vH}\/-\/\mu_{vF}$'
 
+	
 	fig=plt.figure()
-	fig.suptitle('Neutral House Drift' + r'$\/(\mu_{vH})$' + '- Neutral Face Drift' + r'$\/(\mu_{vF}$)', fontsize=30)
-
+	fig.subplots_adjust(top=0.95, wspace=0.12, left=0.12, right=0.88, bottom=0.16)
+	sns.despine()
+	
 	ax=fig.add_subplot(111)
+	sns.despine()
+	
 	ax.hist(c, bins=20, facecolor='DarkBlue', alpha=0.4)
-
+	sns.despine()
 	c_quantiles=mquantiles(c, prob=[0.025, 0.975])
-	ax.axvline(c_quantiles[0], lw=2.0, ls='--', color='Black', alpha=0.5)
-	ax.axvline(c_quantiles[1], lw=2.0, ls='--', color='Black', alpha=0.5)
+	ax.axvline(c_quantiles[0], lw=2.0, ls='--', color='Black', alpha=0.4)
+	ax.axvline(c_quantiles[1], lw=2.0, ls='--', color='Black', alpha=0.4)
 	c_mean=str(c.mean())[:4]
 	c_lower=str(c_quantiles[0])[:5]
 	c_upper=str(c_quantiles[1])[:4]
 
-	ax.text(0.5, .92, r'$\mu_\Delta=%s;\/\/95%sCI[%s, %s]$' % (c_mean, "\%", c_lower, c_upper), fontsize=28, va='center', ha='center', transform=ax.transAxes) 
+	ax.text(0.5, .92, r'$\mu_\Delta=%s;\/\/95%sCI[%s, %s]$' % (c_mean, "\%", c_lower, c_upper), fontsize=22, va='center', ha='center', transform=ax.transAxes)
 
 	pos_float=(c>0).mean()*100
 	neg_float=(c<0).mean()*100
@@ -179,33 +197,31 @@ def plot_neutral_traces(model):
 	neg_str=str(neg_float)
 	pos=pos_str[:5]
 	neg=neg_str[:4]
-	
-	ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg, "\%", pos, "\%"), fontsize=28, va='center', ha='center', transform=ax.transAxes) 
-	plt.setp(ax.get_xticklabels(), fontsize=25)
-	ax.set_xlabel(x_axis_list, fontsize=30, labelpad=13)
+
+	ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg, "\%", pos, "\%"), fontsize=22, va='center', ha='center', transform=ax.transAxes)
+	plt.setp(ax.get_xticklabels(), fontsize=18)
+	plt.setp(ax.get_yticklabels(), visible=False)
 	plt.xlim(-0.1, 0.4)
-	plt.ylim(0, 1000)
+	plt.ylim(0, 3000)
 
 	plt.locator_params(axis='x', nbins=6)
-
-	plt.setp(ax.get_yticklabels(), fontsize=12)
-	plt.setp(ax.get_xticklabels(), fontsize=12)
-	if ax.is_first_col():
-		ax.set_ylabel("Probability Mass", fontsize=30, labelpad=12)
-
-	plt.savefig("face_house_neutral_drift.pdf", format="pdf")
-	plt.savefig("face_house_neutral_drift.jpeg", format="jpeg", dpi=900)
-
-
 	
+	ax.set_xlabel(r'$\mu_{vH}\/-\/\mu_{vF}$', fontsize=24, labelpad=13)
+	ax.set_ylabel("Probability Mass", fontsize=22, labelpad=12)
+
+	plt.savefig("face_house_neutral_drift.png", format="png", dpi=600)
+	#plt.savefig("face_house_neutral_drift.jpeg", format="jpeg", dpi=900)
+
+
+
 def plot_diff_traces(model):
-	
-	vf_list, vh_list, z_list=diff_traces(model)	
-	
+
+	vf_list, vh_list, z_list=diff_traces(model)
+
 	param_list=[vf_list, vh_list, z_list]
-	
+
 	x_axis_list=[r'$\mu_{90H}\/-\/\mu_{50N}$', r'$\mu_{70H}\/-\/\mu_{50N}$', r'$\mu_{70F}\/-\/\mu_{50N}$', r'$\mu_{90F}\/-\/\mu_{50N}$']
-	
+
 	fig=plt.figure(figsize=(38, 5))
 	fig.subplots_adjust(top=0.95, wspace=0.15, left=0.02, right=0.98, bottom=0.20)
 	#fig.suptitle('Mean Face Drift-Rate' + r'$\/(\mu_{vF})$', fontsize=35)
@@ -217,35 +233,34 @@ def plot_diff_traces(model):
 		c_quantiles=mquantiles(c, prob=[0.025, 0.975])
 		ax.axvline(c_quantiles[0], lw=3.0, ls='--', color='DarkGray', alpha=0.5)
 		ax.axvline(c_quantiles[1], lw=3.0, ls='--', color='DarkGray', alpha=0.5)
-		
+
 		c_mean=str(c.mean())[:5]
 		c_lower=str(c_quantiles[0])[:5]
 		c_upper=str(c_quantiles[1])[:5]
-		
-		ax.text(0.5, .92, r'$\mu_\Delta=%s;\/95%sCI[%s, %s]}$' % (c_mean, "\%", c_lower, c_upper), fontsize=17, va='center', ha='center', transform=ax.transAxes) 
-		
+
+		ax.text(0.5, .92, r'$\mu_\Delta=%s;\/95%sCI[%s, %s]}$' % (c_mean, "\%", c_lower, c_upper), fontsize=16, va='center', ha='center', transform=ax.transAxes)
+
 		pos_float=(c>0).mean()*100
 		neg_float=(c<0).mean()*100
 		pos_str=str(pos_float)[:4]
 		neg_str=str(neg_float)[:4]
-		ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg_str, "\%", pos_str, "\%"), fontsize=18, va='center', ha='center', transform=ax.transAxes)
-		
+		ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg_str, "\%", pos_str, "\%"), fontsize=17, va='center', ha='center', transform=ax.transAxes)
+
 		ax.set_xlabel(x_axis_list[i-1], fontsize=25, labelpad=12)
-		
-		plt.ylim(0, 1000)
-		
+
+		plt.ylim(0, 3000)
+
 		plt.locator_params(axis='x', nbins=6)
 		plt.setp(ax.get_xticklabels(), fontsize=16)
-		
 		plt.setp(ax.get_yticklabels(), visible=False)
 		#if ax.is_first_col():
 		#	ax.set_ylabel("Probability Mass", fontsize=30, labelpad=10)
 		i+=1
-	
-	plt.savefig("face_drift_comparisons.pdf", format="pdf")
-	plt.savefig("face_drift_comparisons.jpeg", format="jpeg", dpi=900)
-		
-	
+
+	plt.savefig("face_drift_comparisons.png", format="png", dpi=600)
+	#plt.savefig("face_drift_comparisons.jpeg", format="jpeg", dpi=900)
+
+
 	fig=plt.figure(figsize=(38, 5))
 	fig.subplots_adjust(top=0.95, wspace=0.15, left=0.02, right=0.98, bottom=0.20)
 	#fig.suptitle('Mean House Drift-Rate' + r'$\/(\mu_{vH})$', fontsize=35)
@@ -253,39 +268,40 @@ def plot_diff_traces(model):
 	for c in vh_list:
 		ax=fig.add_subplot(1, 4, i)
 		#ax.hist(c, bins=15, facecolor='SlateBlue', alpha=0.8)
-		ax.hist(c, bins=15, facecolor='Green', alpha=0.4)
+		ax.hist(c, bins=15, facecolor='Red', alpha=0.4)
 		c_quantiles=mquantiles(c, prob=[0.025, 0.975])
 		ax.axvline(c_quantiles[0], lw=3.0, ls='--', color='DarkGray', alpha=0.5)
 		ax.axvline(c_quantiles[1], lw=3.0, ls='--', color='DarkGray', alpha=0.5)
-		
+
 		c_mean=str(c.mean())[:5]
 		c_lower=str(c_quantiles[0])[:5]
 		c_upper=str(c_quantiles[1])[:5]
-		
-		ax.text(0.5, .92, r'$\mu_\Delta = %s;\/95%s CI[%s, %s]}$' % (c_mean, "\%", c_lower, c_upper), fontsize=17, va='center', ha='center', transform=ax.transAxes) 
-		
+
+		ax.text(0.5, .92, r'$\mu_\Delta = %s;\/95%s CI[%s, %s]}$' % (c_mean, "\%", c_lower, c_upper), fontsize=16, va='center', ha='center', transform=ax.transAxes)
+
 		pos_float=(c>0).mean()*100
-		neg_float=(c<0).mean()*100                                                                                                                
+		neg_float=(c<0).mean()*100
 		pos_str=str(pos_float)[:4]
 		neg_str=str(neg_float)[:4]
-		ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg_str, "\%", pos_str, "\%"), fontsize=18, va='center', ha='center', transform=ax.transAxes)
-		
+		ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg_str, "\%", pos_str, "\%"), fontsize=17, va='center', ha='center', transform=ax.transAxes)
+
 		ax.set_xlabel(x_axis_list[i-1], fontsize=25, labelpad=10)
-		
-		plt.ylim(0, 1000)
-		
+
+		plt.ylim(0, 3000)
+
 		plt.locator_params(axis='x', nbins=6)
 		plt.setp(ax.get_xticklabels(), fontsize=16)
-	
+
 		plt.setp(ax.get_yticklabels(), visible=False)
 		#if ax.is_first_col():
 		#	ax.set_ylabel("Probability Mass", fontsize=30, labelpad=10)
-		
+
 		i+=1
-	plt.savefig("house_drift_comparisons.pdf", format="pdf")
-	plt.savefig("house_drift_comparisons.jpeg", format="jpeg", dpi=900)
-	
-	
+	plt.savefig("house_drift_comparisons.png", format="png", dpi=600)
+	#plt.savefig("house_drift_comparisons.pdf", format="pdf")
+	#plt.savefig("house_drift_comparisons.jpeg", format="jpeg", dpi=900)
+
+
 	fig=plt.figure(figsize=(38, 5))
 	fig.subplots_adjust(top=0.95, wspace=0.15, left=0.02, right=0.98, bottom=0.20)
 	#fig.suptitle('Mean Starting-Point' + r'$\/(\mu_{z})$', fontsize=35)
@@ -293,41 +309,42 @@ def plot_diff_traces(model):
 	for c in z_list:
 		ax=fig.add_subplot(1, 4, i)
 		ax.hist(c, bins=15, facecolor='SlateBlue', alpha=0.4)
-		
+
 		c_quantiles=mquantiles(c, prob=[0.025, 0.975])
 		ax.axvline(c_quantiles[0], lw=3.0, ls='--', color='DarkGray', alpha=0.5)
 		ax.axvline(c_quantiles[1], lw=3.0, ls='--', color='DarkGray', alpha=0.5)
-		
+
 		c_mean=str(c.mean())[:5]
 		c_lower=str(c_quantiles[0])[:5]
 		c_upper=str(c_quantiles[1])[:5]
-		
-		ax.text(0.5, .92, r'$\mu_\Delta = %s;\/95%s CI[%s, %s]}$' % (c_mean, "\%", c_lower, c_upper), fontsize=17, va='center', ha='center', transform=ax.transAxes) 
-		
+
+		ax.text(0.5, .92, r'$\mu_\Delta = %s;\/95%s CI[%s, %s]}$' % (c_mean, "\%", c_lower, c_upper), fontsize=16, va='center', ha='center', transform=ax.transAxes)
+
 		pos_float=(c>0).mean()*100
 		neg_float=(c<0).mean()*100
 		pos_str=str(pos_float)[:4]
 		neg_str=str(neg_float)[:4]
-		ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg_str, "\%", pos_str, "\%"), fontsize=18, va='center', ha='center', transform=ax.transAxes) 
-		
+		ax.text(0.5, .82, r'$%s%s\/<\/0\/<\/%s%s$' % (neg_str, "\%", pos_str, "\%"), fontsize=17, va='center', ha='center', transform=ax.transAxes)
+
 		ax.set_xlabel(x_axis_list[i-1], fontsize=25, labelpad=12)
-		
+
 		plt.ylim(0, 1000)
-		
+
 		plt.locator_params(axis='x', nbins=6)
 		plt.setp(ax.get_xticklabels(), fontsize=16)
-	
+
 		plt.setp(ax.get_yticklabels(), visible=False)
-		
+
 		#if ax.is_first_col():
 		#	ax.set_ylabel("Probability Mass", fontsize=30, labelpad=10)
-		
+
 		i+=1
-		
-	plt.savefig("starting_point_comparisons.pdf", format="pdf")
-	plt.savefig("starting_point_comparisons.jpeg", format="jpeg", dpi=900)
-	plt.savefig("starting_point_comparisons.tiff", format="tiff", dpi=900)
-	
+
+	plt.savefig("starting_point_comparisons.png", format="png", dpi=600)
+	#plt.savefig("starting_point_comparisons.pdf", format="pdf")
+	#plt.savefig("starting_point_comparisons.jpeg", format="jpeg", dpi=900)
+	#plt.savefig("starting_point_comparisons.tiff", format="tiff", dpi=900)
+
 def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
                                    samples=100, alpha=.5, hexbin=False,
                                    value_range=(0, 6),
@@ -468,7 +485,7 @@ def _plot_posterior_pdf_node(bottom_node, axis, value_range=None, samples=10, bi
 
 def plot_avgm_predictive(model, plot_func=None, required_method='pdf', columns=None, save=True, path=None, figsize=(12,11), format='jpeg', **kwargs):
 
-	from hddm import utils 
+	from hddm import utils
 
 	if 'value_range' is None:
 		rt = np.abs(model.data['rt']); kwargs['value_range'] = (np.min(rt.min()-.2, 0), rt.max())
@@ -490,14 +507,14 @@ def plot_avgm_predictive(model, plot_func=None, required_method='pdf', columns=N
 		ax.text(0.9, 0.7, tag[0][-3:], fontsize=32)
 		# Plot individual subjects (if present)
 		for node_name, bottom_node in nodes.iterrows():
-			if not hasattr(bottom_node['node'], required_method):		
+			if not hasattr(bottom_node['node'], required_method):
 				continue # skip nodes that do not define the required_method
 
 			print str(node_name)
 			print str(tag)
 			plot_func(bottom_node['node'], ax, **kwargs)
 			i=i+1
-	
+
 	for ax in fig.axes:
 		ax.set_xlim(0.5, 5.5)
 		ax.set_xticks([1, 2, 3, 4, 5])
@@ -505,16 +522,16 @@ def plot_avgm_predictive(model, plot_func=None, required_method='pdf', columns=N
 			ax.set_xlabel("Response Time (s)", fontsize=30)
 			for tick in ax.xaxis.get_major_ticks():
 			                tick.label.set_fontsize(25)
-			
+
 			ax.set_xticklabels([1, 2, 3, 4, 5])
-			
+
 		else:
 			plt.setp(ax.get_xticklabels(), visible=False)
-		
+
 		if ax.is_first_row():
 			if ax.is_first_col():
 				ax.set_title("Face", fontsize=40)
-			else:	
+			else:
 				ax.set_title("House", fontsize=40)
 
 		if ax.is_first_col():
@@ -525,9 +542,9 @@ def plot_avgm_predictive(model, plot_func=None, required_method='pdf', columns=N
 			                tick.label.set_fontsize(23)
 		else:
 			plt.setp(ax.get_yticklabels(), visible=False)
-	
+
 	fig.text(0.01, 0.5, "Probability of Response", va="center", rotation="vertical", fontsize=30, family='sans-serif')
-	
+
 	if save:
 		print "Double Okay"
 		fname = "AvgmQP"
@@ -536,7 +553,7 @@ def plot_avgm_predictive(model, plot_func=None, required_method='pdf', columns=N
 		if isinstance(format, str):
 			format = [format]
 		[fig.savefig('%s.%s' % (os.path.join(path, fname), x), format=x, dpi=300) for x in format]
-	
+
 
 def plot_posterior_predictive(model, plot_func=None, required_method='pdf', columns=None, save=False, path=None,
 							  figsize=(8,6), format='png', **kwargs):
@@ -570,7 +587,7 @@ def plot_posterior_predictive(model, plot_func=None, required_method='pdf', colu
 
 			if 'subj_idx' in bottom_node:
 				#ax.set_title(str(bottom_node['subj_idx']))
-				ax.text(0.05, 0.95, (str(bottom_node['subj_idx'])), 
+				ax.text(0.05, 0.95, (str(bottom_node['subj_idx'])),
 					va='top', transform=ax.transAxes,
 					fontsize=16, fontweight='bold')
 
@@ -603,21 +620,21 @@ def plot_posterior_predictive(model, plot_func=None, required_method='pdf', colu
 
 
 def sub_dists(data, nbins=40, save=True):
-	
+
 	for i, rest in data.groupby('subj_idx'):
 		fdata=rest[rest['stim']=='face']
 		hdata=rest[rest['stim']=='house']
-		
+
 		face=hddm.utils.flip_errors(fdata)
 		house=hddm.utils.flip_errors(hdata)
-		
+
 		face_rts=face.rt
 		house_rts=house.rt
-			
+
 		subj_fig=plt.figure(figsize=(14, 8), dpi=150)
 		axF = subj_fig.add_subplot(211, xlabel='RT', ylabel='count', title='FACE RT distributions')
 		axH = subj_fig.add_subplot(212, xlabel='RT', ylabel='count', title='HOUSE RT distributions')
-		
+
 		axF.hist(face_rts, color='DodgerBlue', lw=1.5, bins=nbins, histtype='stepfilled', alpha=0.6)
 		axH.hist(house_rts, color='LimeGreen', lw=1.5, bins=nbins, histtype='stepfilled', alpha=0.6)
 		axF.grid()
@@ -635,7 +652,7 @@ def all_dists(data, nbins=40, save=False):
 
 		fdata=hddm.utils.flip_errors(data[(data['stim']=='face')])
 		hdata=hddm.utils.flip_errors(data[(data['stim']=='house')])
-		
+
 		fig=plt.figure(figsize=(14, 8))
 		axF = fig.add_subplot(211, xlabel='RT', ylabel='count', title='FACE RT distributions')
 		axH = fig.add_subplot(212, xlabel='RT', ylabel='count', title='HOUSE RT distributions')
@@ -644,42 +661,38 @@ def all_dists(data, nbins=40, save=False):
 		    axF.hist(facerts.rt, bins=nbins, label=str(i), histtype='stepfilled', alpha=0.3)
 		for i, houserts in hdata.groupby('subj_idx'):
 		    axH.hist(houserts.rt, bins=nbins, label=str(i), histtype='stepfilled', alpha=0.3)
-		
+
 		axF.grid()
 		axH.grid()
 		axF.set_xlim(-6, 6)
-		axH.set_xlim(-6, 6)		
-		
+		axH.set_xlim(-6, 6)
+
 		handles, labels = axF.get_legend_handles_labels()
 		fig.legend(handles[:], labels[:], loc=7)
-				
+
 		if save:
 			plt.savefig('AllSubj_RTDists.png')
 		else:
 			plt.show()
 
 
-def pred_rtPLOT(code_type, rt_ax=None, xrt=None, yrtFace=None, yrtHouse=None, ind=0, flast_rt=np.zeros([5]), hlast_rt=np.zeros([5])):
+def pred_rtPLOT(code_type, rt_ax=None, xrt=None, yrtFace=None, yrtHouse=None, mname='EvT', ind=0, flast_rt=np.zeros([5]), hlast_rt=np.zeros([5])):
 	"""
-	Plotting function: 
-		*plots average empirical and theoretical accuracy 
+	Plotting function:
+		*plots average empirical and theoretical accuracy
 		 for each condition (averaged over subjects)
 		*the matplotlib fill function covers the area between
-		 all simulated datasets -- Better when running multiple 
+		 all simulated datasets -- Better when running multiple
 		 simulations.  If only running 1 sim, use the between_PLOTs
 		*called by plot_predictive_behav()
 	"""
-
-	#f_theo=rt_ax.plot(xrt, yrtFace, '-', color='RoyalBlue', lw=0.6, alpha=0.2)
-	#h_theo=rt_ax.plot(xrt, yrtHouse,'-', color='FireBrick', lw=0.6, alpha=0.2)
+	
 	f_theo=rt_ax.plot(xrt, yrtFace, '-', color='RoyalBlue', lw=0.6, alpha=0.2)
 	h_theo=rt_ax.plot(xrt, yrtHouse,'-', color='FireBrick', lw=0.6, alpha=0.2)
 
 	if ind!=0:
 		yrtF2=flast_rt
 		yrtH2=hlast_rt
-		#face_fill=rt_ax.fill_between(xrt, yrtFace, yrtFace-(yrtFace-yrtF2), facecolor='RoyalBlue', alpha=0.05)
-		#house_fill=rt_ax.fill_between(xrt, yrtHouse, yrtHouse-(yrtHouse-yrtH2), facecolor='LimeGreen', alpha=0.05)
 		face_fill=rt_ax.fill_between(xrt, yrtFace, yrtFace-(yrtFace-yrtF2), facecolor='RoyalBlue', alpha=0.05)
 		house_fill=rt_ax.fill_between(xrt, yrtHouse, yrtHouse-(yrtHouse-yrtH2), facecolor='FireBrick', alpha=0.05)
 
@@ -696,41 +709,40 @@ def pred_rtPLOT(code_type, rt_ax=None, xrt=None, yrtFace=None, yrtHouse=None, in
 		rt_ax.set_ylim(1.6, 3.5)
 		rt_ax.set_xticks([1, 2, 3, 4, 5])
 		rt_ax.set_xlim(0.6, 5.5)
-		rt_ax.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=32)
+		rt_ax.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=18)
 		rt_ax.set_yticks(np.arange(1.5, 4.0, 0.5))
-		rt_ax.set_yticklabels(np.arange(1.5, 4.0, 0.5), fontsize=25)
-		rt_ax.set_ylabel('Response Time (s)', fontsize=35, labelpad=14)
-		rt_ax.set_xlabel('Prior Probability Cue', fontsize=35, labelpad=10)
+		rt_ax.set_yticklabels(np.arange(1.5, 4.0, 0.5), fontsize=18)
+		
+		if mname=='pbm':
+			rt_ax.set_ylabel('Response Time (s)', fontsize=22, labelpad=14)
+		
+		rt_ax.set_xlabel('Prior Probability Cue', fontsize=22, labelpad=10)
 
 
 	return yrtFace, yrtHouse
 
-def pred_accPLOT(code_type, acc_ax=None, xacc=None, yaccFace=None, yaccHouse=None, ind=0, flast_acc=np.zeros([5]), hlast_acc=np.zeros([5])):
-	"""
-	
-	Plotting function: 
-		*plots average empirical and theoretical accuracy 
-		 for each condition (averaged over subjects)
-		*the matplotlib fill function covers the area between
-		 all simulated datasets -- Better when running multiple 
-		 simulations.  If only running 1 sim, use the between_PLOTs
-		*called by plot_predictive_behav()
-	
+def pred_accPLOT(code_type, acc_ax=None, xacc=None, yaccFace=None, yaccHouse=None, mname='EvT', ind=0, flast_acc=np.zeros([5]), hlast_acc=np.zeros([5])):
 	"""
 
-	#f_theo=acc_ax.plot(xacc, yaccFace, '-', color='RoyalBlue', lw=0.6, alpha=0.2)
-	#h_theo=acc_ax.plot(xacc, yaccHouse, '-', color='LimeGreen', lw=0.6, alpha=0.2)
+	Plotting function:
+		*plots average empirical and theoretical accuracy
+		 for each condition (averaged over subjects)
+		*the matplotlib fill function covers the area between
+		 all simulated datasets -- Better when running multiple
+		 simulations.  If only running 1 sim, use the between_PLOTs
+		*called by plot_predictive_behav()
+
+	"""
+	
 	f_theo=acc_ax.plot(xacc, yaccFace, '-', color='RoyalBlue', lw=0.6, alpha=0.2)
 	h_theo=acc_ax.plot(xacc, yaccHouse, '-', color='FireBrick', lw=0.6, alpha=0.2)
-	
+
 	if ind!=0:
 		yaccF2=flast_acc
 		yaccH2=hlast_acc
-		#face_fill=acc_ax.fill_between(xacc, yaccFace, yaccFace-(yaccFace-yaccF2), facecolor='RoyalBlue', alpha=0.05)
-		#house_fill=acc_ax.fill_between(xacc, yaccHouse, yaccHouse-(yaccHouse-yaccH2), facecolor='LimeGreen', alpha=0.05)
 		face_fill=acc_ax.fill_between(xacc, yaccFace, yaccFace-(yaccFace-yaccF2), facecolor='RoyalBlue', alpha=0.05)
 		house_fill=acc_ax.fill_between(xacc, yaccHouse, yaccHouse-(yaccHouse-yaccH2), facecolor='FireBrick', alpha=0.05)
-	
+
 	if code_type=='HNL':
 		acc_ax.set_ylim(0.6, 1.0)
 		acc_ax.set_xticks([1, 2, 3])
@@ -739,110 +751,31 @@ def pred_accPLOT(code_type, acc_ax=None, xacc=None, yaccFace=None, yaccHouse=Non
 		acc_ax.set_yticks(np.arange(0.6, 1.05, .05))
 		acc_ax.set_yticklabels(np.arange(0.6, 1.05, .05), fontsize=25)
 		acc_ax.set_ylabel('Proportion Correct', fontsize=35, labelpad=14)
-		acc_ax.set_xlabel('Prior Probability Cue', fontsize=35, labelpad=10)	
-			
+		acc_ax.set_xlabel('Prior Probability Cue', fontsize=35, labelpad=10)
+
 	else:
-		
+
 		acc_ax.set_ylim(0.6, 1.0)
 		acc_ax.set_xticks([1, 2, 3, 4, 5])
 		acc_ax.set_xlim(0.5, 5.5)
-		acc_ax.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=32)
+		acc_ax.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=18)
 		acc_ax.set_yticks(np.arange(0.6, 1.05, .05))
-		acc_ax.set_yticklabels(np.arange(0.6, 1.05, .05), fontsize=25)
-		acc_ax.set_ylabel('Proportion Correct', fontsize=35, labelpad=14)
-		acc_ax.set_xlabel('Prior Probability Cue', fontsize=35, labelpad=10)	
+		acc_ax.set_yticklabels(np.arange(0.6, 1.05, .05), fontsize=18)
+		
+		if mname=='pbm':
+			acc_ax.set_ylabel('Proportion Correct', fontsize=22, labelpad=14)
+			#acc_ax.set_xlabel('Prior Probability Cue', fontsize=22, labelpad=10)
 
 	return yaccFace, yaccHouse
-
-
-def predict(params, data, simfx=sims.sim_exp, ntrials=160, pslow=0.0, pfast=0.0, nsims=100, nsims_per_sub=1, save=False, RTname='RT_simexp', ACCname='Acc_simexp'):
-	"""
-	Arguments:
-
-		params (dict):			hierarchical dictionary created with 
-								either parse_stats() or reformat_sims_input()
-
-		data (pandas df):		pandas dataframe with the empirical data used
-								to fit the model to generate the simulation parameters
-
-
-	*Simulates subject-wise data using parameter estimates for each subj/condition 
-	 and calls rt and acc plotting functions to plot behavioral data against model predictions 
-
-	*If save=True, will save RT and ACC plots to working dir
-	"""
-	from myhddm import parse
 	
-	simdf_list=[]
 	
-	if len(data.cue.unique())==3:
-		x=np.array([1,2,3])
-		code_type='HNL'
-	else:
-		x=np.array([1, 2, 3, 4, 5])
-		code_type='AllP'
-
-	face_acc, house_acc, face_rt, house_rt=parse.get_empirical_means(data=data, code_type=code_type)
-	sem_list=parse.get_emp_SE(data, code_type)
-
-	#init sep figure, axes for RT & ACC data
-	fig_rt, ax_rt=plt.subplots(1)
-	fig_acc, ax_acc=plt.subplots(1)
-	
-	fig_acc.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
-	fig_rt.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
-
-	flast_rt=np.zeros([5])
-	hlast_rt=np.zeros([5])
-	flast_acc=np.zeros([5])
-	hlast_acc=np.zeros([5])
-	
-	for i in range(nsims):	
-
-		simdf, params_used=simfx(pdict=params, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-		simdf['sim_n']=[i]*len(simdf.index)
-		simdf_list.append(simdf)
-		Ftheo_acc, Htheo_acc = parse.get_theo_acc(simdf=simdf, code_type=code_type)
-		flast_acc, hlast_acc = pred_accPLOT(code_type=code_type, acc_ax=ax_acc, xacc=x, yaccFace=Ftheo_acc, yaccHouse=Htheo_acc, ind=i, flast_acc=flast_acc, hlast_acc=hlast_acc)
-		Ftheo_rt, Htheo_rt=parse.get_theo_rt(simdf=simdf, code_type=code_type)
-		flast_rt, hlast_rt = pred_rtPLOT(code_type=code_type, rt_ax=ax_rt, xrt=x, yrtFace=Ftheo_rt, yrtHouse=Htheo_rt, ind=i, flast_rt=flast_rt, hlast_rt=hlast_rt)
-	simdf_concat=pd.concat(simdf_list)
-	#plot empirical ACC
-	#ax_acc.grid()
-	#f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
-	#h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=3.5, ecolor='k', color='Green', lw=6.0)
-	f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
-	h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=3.5, ecolor='k', color='Red', lw=6.0)
-	ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1], ax_acc.lines[0], ax_acc.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
-
-	#plot empirical RT
-	#ax_rt.grid()
-	#f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
-	#h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=3.5, ecolor='k', color='Green', lw=6.0)
-	f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
-	h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=3.5, ecolor='k', color='Red', lw=6.0)
-	
-	ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1], ax_rt.lines[0], ax_rt.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
-
-	flist=[fig_rt, fig_acc]
-
-	simdf_concat.to_csv("simdf.csv")
-	if save:
-		fig_rt.savefig(RTname+'.jpeg', dpi=900)
-		fig_acc.savefig(ACCname+'.jpeg', dpi=900)
-		fig_rt.savefig(RTname+'.png', format='png', dpi=500)
-		fig_acc.savefig(ACCname+'.png', format='png', dpi=500)
-		fig_rt.savefig(RTname+'.tif', format='tif', dpi=500)
-		fig_acc.savefig(ACCname+'.tif', fortmat='tif', dpi=500)
-	return simdf_concat
-	
-def predict_from_simdfs(data, simdfs, save=True, RTname='RT_OptSim', ACCname='Acc_OptSim'):
+def predict_from_simdfs(data, simdfs, save=True, mname='EvT'):
 	"""
 	Arguments:
 
 		data (pandas df):		pandas dataframe with the empirical data used
 								to fit the model to generate the simulation parameters
-		
+
 		simdfs (pandas df):     pandas dataframe with multiple simulated datasets
 
 
@@ -850,7 +783,8 @@ def predict_from_simdfs(data, simdfs, save=True, RTname='RT_OptSim', ACCname='Ac
 
 	*If save=True, will save RT and ACC plots to working dir
 	"""
-	from myhddm import parse
+
+	sns.set_style("white")
 
 	if len(data.cue.unique())==3:
 		x=np.array([1,2,3])
@@ -864,8 +798,13 @@ def predict_from_simdfs(data, simdfs, save=True, RTname='RT_OptSim', ACCname='Ac
 
 	#init sep figure, axes for RT & ACC data
 	fig_rt, ax_rt=plt.subplots(1)
+
+	sns.despine()
+
 	fig_acc, ax_acc=plt.subplots(1)
-	
+
+	sns.despine()
+
 	fig_acc.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
 	fig_rt.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
 
@@ -873,22 +812,112 @@ def predict_from_simdfs(data, simdfs, save=True, RTname='RT_OptSim', ACCname='Ac
 	hlast_rt=np.zeros([5])
 	flast_acc=np.zeros([5])
 	hlast_acc=np.zeros([5])
-	
-	for simn, rest in simdfs.groupby('sim_n'):
-		
+
+	for simn, rest in simdfs.groupby('sim_num'):
+
 		Ftheo_acc, Htheo_acc = parse.get_theo_acc(simdf=rest, code_type=code_type)
-		flast_acc, hlast_acc = pred_accPLOT(code_type=code_type, acc_ax=ax_acc, xacc=x, yaccFace=Ftheo_acc, yaccHouse=Htheo_acc, ind=simn, flast_acc=flast_acc, hlast_acc=hlast_acc)
+		flast_acc, hlast_acc = pred_accPLOT(code_type=code_type, acc_ax=ax_acc, xacc=x, yaccFace=Ftheo_acc, yaccHouse=Htheo_acc, ind=simn, flast_acc=flast_acc, hlast_acc=hlast_acc, mname=mname)
 
 		Ftheo_rt, Htheo_rt=parse.get_theo_rt(simdf=rest, code_type=code_type)
-		flast_rt, hlast_rt = pred_rtPLOT(code_type=code_type, rt_ax=ax_rt, xrt=x, yrtFace=Ftheo_rt, yrtHouse=Htheo_rt, ind=simn, flast_rt=flast_rt, hlast_rt=hlast_rt)
+		flast_rt, hlast_rt = pred_rtPLOT(code_type=code_type, rt_ax=ax_rt, xrt=x, yrtFace=Ftheo_rt, yrtHouse=Htheo_rt, ind=simn, flast_rt=flast_rt, hlast_rt=hlast_rt, mname=mname)
 
+	#plot empirical ACC
+	f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=2.5, ecolor='k', color='Blue', lw=4.0)
+	h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=2.5, ecolor='k', color='Red', lw=4.0)
+	
+	if mname=='pbm':
+		ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1], ax_acc.lines[0], ax_acc.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
+
+	sns.despine()
+
+	#plot empirical RT
+	f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=2.5, ecolor='k', color='Blue', lw=4.0)
+	h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=2.5, ecolor='k', color='Red', lw=4.0)
+	
+	if mname=='pbm':
+		ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1], ax_rt.lines[0], ax_rt.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
+
+	sns.despine()
+
+	flist=[fig_rt, fig_acc]
+
+	if save:
+		fig_rt.savefig(mname+'_rt.png', dpi=400)
+		fig_acc.savefig(mname+'_acc.png', dpi=400)
+
+def predict(params, data, simfx=sims.sim_exp, ntrials=160, pslow=0.0, pfast=0.0, nsims=100, nsims_per_sub=1, errors=False, save=False, RTname='RT_simexp', ACCname='Acc_simexp'):
+	"""
+	Arguments:
+
+		params (dict):			hierarchical dictionary created with
+								either parse_stats() or reformat_sims_input()
+
+		data (pandas df):		pandas dataframe with the empirical data used
+								to fit the model to generate the simulation parameters
+
+
+	*Simulates subject-wise data using parameter estimates for each subj/condition
+	 and calls rt and acc plotting functions to plot behavioral data against model predictions
+
+	*If save=True, will save RT and ACC plots to working dir
+	"""
+	from myhddm import parse
+
+	simdf_list=[]
+
+	if len(data.cue.unique())==3:
+		x=np.array([1,2,3])
+		code_type='HNL'
+	else:
+		x=np.array([1, 2, 3, 4, 5])
+		code_type='AllP'
+		
+	if errors:
+		face_rt, house_rt=parse.get_emp_error_rt(data=data)
+		face_acc, house_acc, cf, ch=parse.get_empirical_means(data=data, code_type=code_type)
+	
+	else:
+		face_acc, house_acc, face_rt, house_rt=parse.get_empirical_means(data=data, code_type=code_type)
+	
+	face_rt_error, house_rt_error=parse.get_emp_error_rt(data=data)
+	
+	sem_list=parse.get_emp_SE(data, code_type)
+
+	#init sep figure, axes for RT & ACC data
+	fig_rt, ax_rt=plt.subplots(1)
+	fig_acc, ax_acc=plt.subplots(1)
+
+	fig_acc.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
+	fig_rt.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
+
+	flast_rt=np.zeros([5])
+	hlast_rt=np.zeros([5])
+	flast_acc=np.zeros([5])
+	hlast_acc=np.zeros([5])
+
+	for i in range(nsims):
+
+		simdf, params_used=simfx(pdict=params, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
+		simdf['sim_n']=[i]*len(simdf.index)
+		simdf_list.append(simdf)
+		Ftheo_acc, Htheo_acc = parse.get_theo_acc(simdf=simdf, code_type=code_type)
+		flast_acc, hlast_acc = pred_accPLOT(code_type=code_type, acc_ax=ax_acc, xacc=x, yaccFace=Ftheo_acc, yaccHouse=Htheo_acc, ind=i, flast_acc=flast_acc, hlast_acc=hlast_acc)
+		
+		if errors:
+			Ftheo_rt, Htheo_rt=parse.get_theo_error_rt(simdf=simdf)
+		else:
+			Ftheo_rt, Htheo_rt=parse.get_theo_rt(simdf=simdf, code_type=code_type)
+		
+		flast_rt, hlast_rt = pred_rtPLOT(code_type=code_type, rt_ax=ax_rt, xrt=x, yrtFace=Ftheo_rt, yrtHouse=Htheo_rt, ind=i, flast_rt=flast_rt, hlast_rt=hlast_rt)
+
+	simdf_concat=pd.concat(simdf_list)
 	#plot empirical ACC
 	#ax_acc.grid()
 	#f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
 	#h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=3.5, ecolor='k', color='Green', lw=6.0)
 	f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
 	h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=3.5, ecolor='k', color='Red', lw=6.0)
-	ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1], ax_acc.lines[0], ax_acc.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
+	#ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1], ax_acc.lines[0], ax_acc.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
 
 	#plot empirical RT
 	#ax_rt.grid()
@@ -896,177 +925,38 @@ def predict_from_simdfs(data, simdfs, save=True, RTname='RT_OptSim', ACCname='Ac
 	#h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=3.5, ecolor='k', color='Green', lw=6.0)
 	f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
 	h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=3.5, ecolor='k', color='Red', lw=6.0)
-	ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1], ax_rt.lines[0], ax_rt.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
-	
-	flist=[fig_rt, fig_acc]
+	#ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1], ax_rt.lines[0], ax_rt.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0, fontsize=18)
 
-		
+	simdf_concat.to_csv("simdf.csv")
 	if save:
-		#fig_rt.savefig(RTname+'.jpeg', dpi=900)
-		#fig_acc.savefig(ACCname+'.jpeg', dpi=900)
-		fig_rt.savefig(RTname+'.png', format='png', dpi=500)
-		fig_acc.savefig(ACCname+'.png', format='png', dpi=500)
+		fig_rt.savefig(RTname+'.jpeg', dpi=900)
+		fig_acc.savefig(ACCname+'.jpeg', dpi=900)
+		#fig_rt.savefig(RTname+'.png', format='png', dpi=500)
+		#fig_acc.savefig(ACCname+'.png', format='png', dpi=500)
 		#fig_rt.savefig(RTname+'.tif', format='tif', dpi=500)
 		#fig_acc.savefig(ACCname+'.tif', fortmat='tif', dpi=500)
-
-def predict_simple(params, data, simfx=sims.sim_exp, ntrials=100, pslow=0.0, pfast=0.0, nsims=100, nsims_per_sub=1, save=False, RTname='RT_simexp', ACCname='Acc_simexp'):
-	"""
-	Arguments:
-
-		params (dict):			hierarchical dictionary created with 
-								either parse_stats() or reformat_sims_input()
-
-		data (pandas df):		pandas dataframe with the empirical data used
-								to fit the model to generate the simulation parameters
-
-
-	*Simulates subject-wise data using parameter estimates for each subj/condition 
-	 and calls rt and acc plotting functions to plot behavioral data against model predictions 
-
-	*If save=True, will save RT and ACC plots to working dir
-	"""
-	from myhddm import parse
-
-	if len(data.cue.unique())==3:
-		x=np.array([1,2,3])
-		code_type='HNL'
-	else:
-		x=np.array([1, 2, 3, 4, 5])
-		code_type='AllP'
-
-	face_acc, house_acc, face_rt, house_rt=parse.get_empirical_means(data=data, code_type=code_type)
-	sem_list=parse.get_emp_SE(data, code_type)
-
-	#init sep figure, axes for RT & ACC data
-	fig_rt, ax_rt=plt.subplots(1)
-	fig_acc, ax_acc=plt.subplots(1)
-	
-	fig_acc.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
-	fig_rt.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
-	
-	flast_rt=np.zeros([5])
-	hlast_rt=np.zeros([5])
-	flast_acc=np.zeros([5])
-	hlast_acc=np.zeros([5])
-
-	for i in range(nsims):	
-		if hasattr(params, 'index'):
-			pdict_one=params[0]
-			pdict_two=params[1]
-			simdf_one, params_used_one=simfx(pdict=pdict_one, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-			simdf_two, params_used_two=simfx(pdict=pdict_two, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-			simdf=pd.concat([simdf_one, simdf_two], ignore_index=True)
-		else:
-			simdf, params_used=simfx(pdict=params, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-
-		Ftheo_acc, Htheo_acc = parse.get_theo_acc(simdf=simdf, code_type=code_type)
-
-		flast_acc, hlast_acc = pred_accPLOT(code_type=code_type, acc_ax=ax_acc, xacc=x, yaccFace=Ftheo_acc, yaccHouse=Htheo_acc, ind=i, flast_acc=flast_acc, hlast_acc=hlast_acc)
-
-		Ftheo_rt, Htheo_rt=parse.get_theo_rt(simdf=simdf, code_type=code_type)
-		flast_rt, hlast_rt = pred_rtPLOT(code_type=code_type, rt_ax=ax_rt, xrt=x, yrtFace=Ftheo_rt, yrtHouse=Htheo_rt, ind=i, flast_rt=flast_rt, hlast_rt=hlast_rt)
-
-	#plot empirical ACC
-	#ax_acc.grid()
-	f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=1.5, ecolor='k', color='Blue', lw=4.0)
-	h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=1.5, ecolor='k', color='Green', lw=4.0)
-	#ax_acc.set_title("Accuracy Data VS. HDDM Predictions")
-	#ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1], ax_acc.lines[0], ax_acc.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0)
-
-	#plot empirical RT
-	#ax_rt.grid()
-	f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=1.5, ecolor='k', color='Blue', lw=4.0)
-	h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=1.5, ecolor='k', color='Green', lw=4.0)
-	#ax_rt.set_title("Response-Time Data VS. HDDM Predictions")
-	#ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1], ax_rt.lines[0], ax_rt.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0)
-
-	#save figures				
-	if save:
-		fig_rt.savefig(RTname+'.jpeg', dpi=300)
-		fig_acc.savefig(ACCname+'.jpeg', dpi=300)
-
-
-	return simdf
-
-
-def predict_error_rt(params, data, simfx=sims.sim_exp, ntrials=100, pslow=0.0, pfast=0.0, nsims=15, nsims_per_sub=1, save=True, RTname='RT_error'):
-	"""
-	Arguments:
-
-		params (dict):			hierarchical dictionary created with 
-								either parse_stats() or reformat_sims_input()
-
-		data (pandas df):		pandas dataframe with the empirical data used
-								to fit the model to generate the simulation parameters
-
-
-	*Simulates subject-wise error data using parameter estimates for each subj/condition 
-	 and calls rt and acc plotting functions to plot behavioral data against model predictions 
-
-	*If save=True, will save RT and ACC plots to working dir
-	"""
-	from myhddm import parse
-
-	if len(data.cue.unique())==3:
-		x=np.array([1,2,3])
-		code_type='HNL'
-	else:
-		x=np.array([1, 2, 3, 4, 5])
-		code_type='AllP'
-
-	face_rt_error, house_rt_error=parse.get_emp_error_rt(data=data)
-
-	#init sep figure, axes for RT & ACC data
-	fig_err, ax_err=plt.subplots(1)
-
-	flast_rt_error=np.zeros([5])
-	hlast_rt_error=np.zeros([5])
-
-
-	for i in range(nsims):	
-		if hasattr(params, 'index'):
-			p68=params[0]
-			p69=params[1]
-			simdf68, params_used=simfx(pdict=p68, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-			simdf69, params_used=simfx(pdict=p69, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-			simdf=pd.concat([simdf68, simdf69], ignore_index=True)
-		else:
-			simdf, params_used=simfx(pdict=params, ntrials=ntrials, pfast=pfast, pslow=pslow, nsims_per_sub=nsims_per_sub)
-
-		Ftheo_rt_error, Htheo_rt_error=parse.get_theo_error_rt(simdf=simdf)
-		flast_rt_error, hlast_rt_error = pred_rtPLOT(code_type=code_type, rt_ax=ax_err, xrt=x, yrtFace=Ftheo_rt_error, yrtHouse=Htheo_rt_error, ind=i, flast_rt=flast_rt_error, hlast_rt=hlast_rt_error)
-
-	#plot empirical ACC
-	ax_err.grid()
-	f_emp_rt_error=ax_err.plot(x, face_rt_error, '-', color='Green', lw=4.0)
-	h_emp_rt_error=ax_err.plot(x, house_rt_error,'-', color='Green', lw=4.0)
-	ax_err.set_title("Error RT Data VS. HDDM Predictions")
-	ax_err.legend((ax_err.lines[-2], ax_err.lines[-1], ax_err.lines[0], ax_err.lines[1]), ('Face Data', 'House Data', 'Face Model', 'House Model'), loc=0)
-
-	simdf.to_csv("../simdf_error.csv")
-
-	#save figures				
-	if save:
-		fig_err.savefig(RTname+'.jpeg', dpi=900)
+	return simdf_concat
 
 
 def plot_data(data, save=True, RTname='RT_Data', ACCname='Acc_Data'):
 	"""
 	Arguments:
 
-		params (dict):			hierarchical dictionary created with 
+		params (dict):			hierarchical dictionary created with
 								either parse_stats() or reformat_sims_input()
 
 		data (pandas df):		pandas dataframe with the empirical data used
 								to fit the model to generate the simulation parameters
 
 
-	*Simulates subject-wise data using parameter estimates for each subj/condition 
-	 and calls rt and acc plotting functions to plot behavioral data against model predictions 
+	*Simulates subject-wise data using parameter estimates for each subj/condition
+	 and calls rt and acc plotting functions to plot behavioral data against model predictions
 
 	*If save=True, will save RT and ACC plots to working dir
 	"""
-	from myhddm import parse
+
+	sns.set_style("white")
+	#sns.despine()
 
 	if len(data.cue.unique())==3:
 		x=np.array([1,2,3])
@@ -1080,22 +970,24 @@ def plot_data(data, save=True, RTname='RT_Data', ACCname='Acc_Data'):
 
 	#init sep figure, axes for RT & ACC data
 	fig_rt, ax_rt=plt.subplots(1)
+	sns.despine()
 	fig_acc, ax_acc=plt.subplots(1)
+	sns.despine()
 	fig_acc.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
 	fig_rt.subplots_adjust(top=0.9, left=0.15, right=0.88, bottom=0.15)
 	#fat
 	#fig_rt.subplots_adjust(top=0.7, left=0.15, right=0.88, bottom=0.15)
 	#plot empirical ACC
-	f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
-	h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=3.5, ecolor='k', color='Red', lw=6.0)
+	f_emp_acc=ax_acc.errorbar(x, face_acc, yerr=sem_list[0], elinewidth=2.5, ecolor='k', color='Blue', lw=4.0)
+	h_emp_acc=ax_acc.errorbar(x, house_acc, yerr=sem_list[1], elinewidth=2.5, ecolor='k', color='Red', lw=4.0)
 	#ax_acc.set_title("Accuracy")
-	ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1]), ('Face', 'House'), loc=0, fontsize=28)
+	ax_acc.legend((ax_acc.lines[-4], ax_acc.lines[-1]), ('Face', 'House'), loc=0, fontsize=18)
 
 	#plot empirical RT
-	f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=3.5, ecolor='k', color='Blue', lw=6.0)
-	h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=3.5, ecolor='k', color='Red', lw=6.0)
+	f_emp_rt=ax_rt.errorbar(x, face_rt, yerr=sem_list[2], elinewidth=2.5, ecolor='k', color='Blue', lw=4.0)
+	h_emp_rt=ax_rt.errorbar(x, house_rt, yerr=sem_list[3], elinewidth=2.5, ecolor='k', color='Red', lw=4.0)
 	#ax_rt.set_title("Response-Time")
-	ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1]), ('Face', 'House'), loc=0, fontsize=28)
+	ax_rt.legend((ax_rt.lines[-4], ax_rt.lines[-1]), ('Face', 'House'), loc=0, fontsize=18)
 
 	if code_type=='HNL':
 		ax_rt.set_ylim(1.5, 3.5)
@@ -1117,28 +1009,25 @@ def plot_data(data, save=True, RTname='RT_Data', ACCname='Acc_Data'):
 		ax_rt.set_ylim(1.6, 3.5)
 		ax_rt.set_xticks([1, 2, 3, 4, 5])
 		ax_rt.set_xlim(0.6, 5.5)
-		ax_rt.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=32)
+		ax_rt.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=18)
 		ax_rt.set_yticks(np.arange(1.5, 4.0, 0.5))
-		ax_rt.set_yticklabels(np.arange(1.5, 4.0, 0.5), fontsize=25)
-		ax_rt.set_ylabel('Response Time (s)', fontsize=35, labelpad=14)
-		ax_rt.set_xlabel('Prior Probability Cue', fontsize=35, labelpad=10)
+		ax_rt.set_yticklabels(np.arange(1.5, 4.0, 0.5), fontsize=18)
+		ax_rt.set_ylabel('Response Time (s)', fontsize=22, labelpad=14)
+		ax_rt.set_xlabel('Prior Probability Cue', fontsize=22, labelpad=10)
+
 		ax_acc.set_ylim(0.6, 1.0)
 		ax_acc.set_xticks([1, 2, 3, 4, 5])
 		ax_acc.set_xlim(0.5, 5.5)
-		ax_acc.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=32)
-		ax_acc.set_ylabel('Proportion Correct', fontsize=35, labelpad=14)
-		ax_acc.set_xlabel('Prior Probability Cue', fontsize=35, labelpad=10)	
+		ax_acc.set_xticklabels(['90H', '70H', '50/50', '70F', '90F'], fontsize=18)
 		ax_acc.set_yticks(np.arange(0.6, 1.05, .05))
-		ax_acc.set_yticklabels(np.arange(0.6, 1.05, .05), fontsize=25)
-		
-	#save figures				
+		ax_acc.set_yticklabels(np.arange(0.6, 1.05, .05), fontsize=18)
+		ax_acc.set_ylabel('Proportion Correct', fontsize=22, labelpad=14)
+		ax_acc.set_xlabel('Prior Probability Cue', fontsize=22, labelpad=10)
+
+	#save figures
 	if save:
-		fig_rt.savefig(RTname+'.jpeg', dpi=900)
-		fig_acc.savefig(ACCname+'.jpeg', dpi=900)
+		fig_rt.savefig(RTname+'.png', dpi=600)
+		fig_acc.savefig(ACCname+'.png', dpi=600)
 
 if __name__ == "__main__":
-	main()	
-
-
-
-
+	main()

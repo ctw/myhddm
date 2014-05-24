@@ -46,19 +46,24 @@ def define_model(mname, project='imaging', regress=False):
 		
 	else:
 		if mname=='msmt':
-			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue'], 'z':'cue', 't':['stim', 'cue']}, informative=False, bias=True, include=['v', 'z', 't', 'a'])
+			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue'], 'z':'cue', 't':['stim', 'cue']}, bias=True, informative=False, include=['v', 'z', 't', 'a', 'sv', 'sz', 'st'])
 		elif mname=='msm':
-			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue'], 'z':'cue'}, informative=False, bias=True, include=['v', 'z', 't', 'a'])
+			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue'], 'z':'cue'},  bias=True, informative=False, include=['v', 'z', 't', 'a', 'sv', 'sz', 'st'])
 		elif mname=='pbm':
-			m=hddm.HDDM(data, depends_on={'v':'stim', 'z':'cue'}, informative=False, bias=True, include=['v', 'z', 't', 'a'])
+			m=hddm.HDDM(data, depends_on={'v':'stim', 'z':'cue'}, bias=True, informative=False, include=['v', 'z', 't', 'a', 'sv', 'sz', 'st'])
 		elif mname=='dbm':
-			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue']}, informative=False, bias=False, include=['v', 't', 'a'])
+			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue']}, bias=False, informative=False, include=['v', 'z', 't', 'a', 'sv', 'sz', 'st'])
 		elif mname=='dbmz':
-			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue']}, informative=False, bias=True, include=['v', 'z', 't', 'a'])
+			m=hddm.HDDM(data, depends_on={'v':['stim', 'cue']}, bias=True, informative=False, include=['v', 'z', 't', 'a', 'sv', 'sz', 'st'])
 		
 	return m
 
 def define_sxbayes(mname, data, project='imaging', regress=False):
+	
+	m=define_single(mname, data, project='imaging', regress=False)
+	return m
+
+def define_single(mname, data, project='imaging', regress=False):
 
 	check_model(mname)
 
