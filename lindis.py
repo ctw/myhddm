@@ -121,51 +121,42 @@ def main_lda():
 
 def plot_correl(ax=None, figname="correlation_plot"):
 
-    sns.set_style("white")
-    sns.set_style("white", {"legend.scatterpoints": 1, "legend.frameon":True})
-
-    #if ax:
-    #    ax=sns.regplot(data.ix[:,0], data.ix[:,1], color='Red', scatter=True, ci=None, scatter_kws={'s':18}, ax=ax)
-    #else:
-    #    ax=sns.regplot(data.ix[:,0], data.ix[:,1], color='Blue', scatter=True, ci=None, scatter_kws={'s':18})
-
-    dataf=pd.read_csv("FaceEigen_RT_keep.csv")
-    datah=pd.read_csv("HouseEigen_RT_keep.csv")
-    data_all=pd.read_csv("StimEigen_RT_keep.csv")
-
-    fig=plt.figure(figsize=(5, 6))
-    ax=fig.add_subplot(111)
-
-    axx=sns.regplot(data_all.ix[:,0], data_all.ix[:,1], color='Black', fit_reg=True, robust=True, label='All, r=.326**', scatter=True, ci=None, scatter_kws={'s':2}, ax=ax)
-    axx=sns.regplot(datah.ix[:,0], datah.ix[:,1], color='Red', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
-    axx=sns.regplot(dataf.ix[:,0], dataf.ix[:,1], color='Blue', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
-    axx=sns.regplot(datah.ix[:,0], datah.ix[:,1], color='Red', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
-    axx=sns.regplot(dataf.ix[:,0], dataf.ix[:,1], color='Blue', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
-    axx=sns.regplot(dataf.ix[:,0], dataf.ix[:,1], color='Blue', fit_reg=True, robust=True, label='Face, r=.320*', scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
-    axx=sns.regplot(datah.ix[:,0], datah.ix[:,1], color='Red', fit_reg=True, robust=True, label='House, r=.333*', scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
-
-    fig.set_tight_layout(True)
-    fig.subplots_adjust(left=.22, bottom=.14, top=.95, right=.7)
-    ax.set_ylim([-1,1])
-    ax.set_xlim([2,14])
-    #ax.set_xticklabels(np.arange(2, 16, 2), fontsize=16)
-    ax.set_xticklabels(np.arange(2, 16, 2), fontsize=10)
-    ax.set_xlabel("Distance to Category Boundary", fontsize=12, labelpad=5)
-
-    leg = ax.legend(loc='best', fancybox=True, fontsize=10)
-    leg.get_frame().set_alpha(0.95)
-
-    #ax.legend(loc=0, fontsize=14)
-    #plt.tight_layout()
-
-    ax.set_ylabel("Response Time (s)", fontsize=12, labelpad=5)
-    ax.set_yticklabels(np.arange(-1, 1.5, 0.5), fontsize=10)
-    sns.despine()
-    #plt.tight_layout(pad=2)
-    #plt.subplots_adjust(left=.22, bottom=.14, top=.95, right=.7)
-    plt.savefig(figname+".png", format='png', dpi=600)
-
-    return fig, ax
+	sns.set_style("white")
+	sns.set_style("white", {"legend.scatterpoints": 1, "legend.frameon":Tru	
+	#if ax:
+	#    ax=sns.regplot(data.ix[:,0], data.ix[:,1], color='Red', scatter=True, ci=None, scatter_kws={'s':18}, ax=ax)
+	#else:
+	#    ax=sns.regplot(data.ix[:,0], data.ix[:,1], color='Blue', scatter=True, ci=None, scatter_kws={'s':1	
+	dataf=pd.read_csv("FaceEigen_RT_keep.csv")
+	datah=pd.read_csv("HouseEigen_RT_keep.csv")
+	data_all=pd.read_csv("StimEigen_RT_keep.csv")	
+	fig=plt.figure(figsize=(5, 6))
+	ax=fig.add_subplot(1	
+	axx=sns.regplot(data_all.ix[:,0], data_all.ix[:,1], color='Black', fit_reg=True, robust=True, label='All, r=.326**', scatter=True, ci=None, scatter_kws={'s':2}, ax=ax)
+	axx=sns.regplot(datah.ix[:,0], datah.ix[:,1], color='Red', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
+	axx=sns.regplot(dataf.ix[:,0], dataf.ix[:,1], color='Blue', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
+	axx=sns.regplot(datah.ix[:,0], datah.ix[:,1], color='Red', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
+	axx=sns.regplot(dataf.ix[:,0], dataf.ix[:,1], color='Blue', fit_reg=True, robust=True, scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
+	axx=sns.regplot(dataf.ix[:,0], dataf.ix[:,1], color='Blue', fit_reg=True, robust=True, label='Face, r=.320*', scatter=True, ci=None, scatter_kws={'s':35}, ax=ax)
+	axx=sns.regplot(datah.ix[:,0], datah.ix[:,1], color='Red', fit_reg=True, robust=True, label='House, r=.333*', scatter=True, ci=None, scatter_kws={'s':35}, ax=	
+	fig.set_tight_layout(True)
+	fig.subplots_adjust(left=.22, bottom=.14, top=.95, right=.7)
+	ax.set_ylim([-1,1])
+	ax.set_xlim([2,14])
+	#ax.set_xticklabels(np.arange(2, 16, 2), fontsize=16)
+	ax.set_xticklabels(np.arange(2, 16, 2), fontsize=10)
+	ax.set_xlabel("Distance to Category Boundary", fontsize=12, labelpad	
+	leg = ax.legend(loc='best', fancybox=True, fontsize=10)
+	leg.get_frame().set_alpha(0.	
+	#ax.legend(loc=0, fontsize=14)
+	#plt.tight_layou	
+	ax.set_ylabel("Response Time (s)", fontsize=12, labelpad=5)
+	ax.set_yticklabels(np.arange(-1, 1.5, 0.5), fontsize=10)
+	sns.despine()
+	#plt.tight_layout(pad=2)
+	#plt.subplots_adjust(left=.22, bottom=.14, top=.95, right=.7)
+	plt.savefig(figname+".png", format='png', dpi=6	
+	return fig, ax
 
 def plot_correl_bycue(ax=None, figname="correlbycue_plot"):
 
